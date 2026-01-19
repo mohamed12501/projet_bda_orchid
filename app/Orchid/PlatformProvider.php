@@ -121,9 +121,7 @@ class PlatformProvider extends OrchidServiceProvider
                     Menu::make('Périodes d\'Examen')
                         ->icon('bs.calendar')
                         ->route('platform.examens.periodes'),
-                    Menu::make('Inscriptions')
-                        ->icon('bs.list-check')
-                        ->route('platform.examens.inscriptions'),
+               
                     Menu::make('Sections')
                         ->icon('bs.collection')
                         ->route('platform.examens.sections'),
@@ -142,9 +140,6 @@ class PlatformProvider extends OrchidServiceProvider
                     Menu::make('Planning Items')
                         ->icon('bs.list-ul')
                         ->route('platform.planning.items'),
-                    Menu::make('Conflits')
-                        ->icon('bs.exclamation-triangle')
-                        ->route('platform.planning.conflicts'),
                 ]);
 
             $menu[] = Menu::make('Statistiques')
