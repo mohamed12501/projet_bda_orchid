@@ -1,45 +1,39 @@
-FROM php:8.2-cli
+# Use PHP 8.2 with Apache
+FROM php:8.2-apache
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
-    unzip \
-    libzip-dev \
-    default-mysql-client
+    libpng-dev libjpeg-dev libfreetype6-dev zip git unzip curl \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd pdo pdo_mysql
 
-# Install PHP extensions (using pdo_mysql instead of pdo_pgsql)
-RUN docker-php-ext-install pdo pdo_mysql mysqli mbstring exif pcntl bcmath gd zip
-
-# Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# Enable Apache mod_rewrite for Laravel
+RUN a2enmod rewrite
 
 # Set working directory
-WORKDIR /app
+WORKDIR /var/www/html
 
-# Copy composer files
-COPY composer.json composer.lock ./
-
-# Install dependencies
-RUN composer install --no-dev --no-scripts --optimize-autoloader
-
-# Copy application files
+# Copy project files
 COPY . .
 
-# Set permissions
-RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache
+# Install Composer
+COPY --from=composer:2.5 /usr/bin/composer /usr/bin/composer
 
-# Cache configuration
-RUN php artisan config:cache && \
-    php artisan route:cache && \
-    php artisan view:cache
+# Install dependencies
+RUN composer install --no-dev --optimize-autoloader
 
-# Expose port
-EXPOSE 8080
+# Set permissions for Laravel storage
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Start application
-CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT
+# Set Apache document root to Laravel public/
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
+
+# Update Apache config
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/000-default.conf \
+    && sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
+# Expose port 80
+EXPOSE 80
+
+# Start Apache
+CMD ["apache2-foreground"]

@@ -1,15 +1,7 @@
 services:
   - type: web
-    name: laravel-orchid-app
-    env: php
-    runtime: php-8.2
-    buildCommand: |
-      composer install --no-dev --optimize-autoloader
-      mkdir -p storage/framework/{sessions,views,cache}
-      mkdir -p storage/logs
-      mkdir -p bootstrap/cache
-      chmod -R 775 storage bootstrap/cache
-    startCommand: |
-      php artisan config:clear
-      php artisan migrate --force
-      php -S 0.0.0.0:$PORT -t public
+    name: laravel-app
+    env: docker
+    plan: free
+    branch: main
+    autoDeploy: true
